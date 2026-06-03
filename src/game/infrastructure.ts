@@ -52,7 +52,7 @@ export const INFRASTRUCTURE: InfraDef[] = [
   {
     id: "apigateway",
     name: "API Gateway",
-    description: "$0.000035/req × 50B requests = bankruptcy",
+    description: "$0.000035/req x 50B requests = bankruptcy",
     baseCost: 100000,
     basePerSec: 55,
   },

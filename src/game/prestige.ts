@@ -30,7 +30,7 @@ export const PRESTIGE_TIERS: PrestigeTier[] = [
     tagline: "Best of both worlds (worst of both worlds)",
     retrospective: "You are now on two clouds. Your architecture diagram requires a scroll bar.",
     requiredCredits: 100000000,
-    warStoryReward: "Intern efficiency ×2",
+    warStoryReward: "Intern efficiency x2",
   },
   {
     id: "serverless",
@@ -46,7 +46,7 @@ export const PRESTIGE_TIERS: PrestigeTier[] = [
     tagline: "Put the compute... everywhere?",
     retrospective: "Your compute is on the edge. Literally. It fell off a shelf in Singapore.",
     requiredCredits: 1000000000000,
-    warStoryReward: "Click income ×5",
+    warStoryReward: "Click income x5",
   },
   {
     id: "onprem",

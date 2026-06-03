@@ -146,7 +146,7 @@ export function App({ initialState, offlineEarnings = 0, offlineSeconds = 0, isN
         for (const milestone of MILESTONE_MESSAGES) {
           if (s.totalCreditsEarned >= milestone.credits && !s.milestonesSeen.includes(milestone.credits)) {
             dispatch({ type: "MARK_MILESTONE", credits: milestone.credits });
-            dispatch({ type: "LOG", message: milestone.message, emoji: "🏆" });
+            dispatch({ type: "LOG", message: milestone.message, emoji: "[*]" });
           }
         }
       }
@@ -263,7 +263,7 @@ export function App({ initialState, offlineEarnings = 0, offlineSeconds = 0, isN
     return (
       <Box flexDirection="column" alignItems="center" justifyContent="center" padding={3}>
         <Box flexDirection="column" borderStyle="double" borderColor="cyan" paddingX={3} paddingY={1} width={60}>
-          <Text bold color="cyan">☁️  EVENTUAL CONSISTENCY</Text>
+          <Text bold color="cyan">EVENTUAL CONSISTENCY</Text>
           <Text dimColor>A Cloud Computing Story</Text>
           <Box flexDirection="column" marginTop={1}>
             {INTRO_LINES.map((line, i) => (
@@ -285,7 +285,7 @@ export function App({ initialState, offlineEarnings = 0, offlineSeconds = 0, isN
     return (
       <Box flexDirection="column" alignItems="center" justifyContent="center" padding={2}>
         <Box flexDirection="column" borderStyle="double" borderColor="green" paddingX={2} paddingY={1}>
-          <Text bold color="green">💰 OFFLINE EARNINGS</Text>
+          <Text bold color="green">OFFLINE EARNINGS</Text>
           <Box marginTop={1} flexDirection="column">
             <Text>You were gone for <Text bold color="cyan">{timeStr}</Text>.</Text>
             <Text>Your infrastructure kept working.</Text>
@@ -306,7 +306,7 @@ export function App({ initialState, offlineEarnings = 0, offlineSeconds = 0, isN
     return (
       <Box flexDirection="column" alignItems="center" justifyContent="center" padding={2}>
         <Box flexDirection="column" borderStyle="double" borderColor="red" paddingX={2} paddingY={1}>
-          <Text bold color="red">⚠️  START NEW GAME</Text>
+          <Text bold color="red">[!] START NEW GAME</Text>
           <Box marginTop={1} flexDirection="column">
             <Text>This will permanently delete your save.</Text>
             <Text>All credits, infrastructure, and interns: gone.</Text>

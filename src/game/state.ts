@@ -102,7 +102,7 @@ export const INITIAL_STATE: GameState = {
   completedPrestigeIds: [],
   warStoryEffects: defaultWarStoryEffects,
 
-  log: [{ id: 0, message: "Welcome. You have nothing. Start shipping.", emoji: "☁️" }],
+  log: [{ id: 0, message: "Welcome. You have nothing. Start shipping.", emoji: "~" }],
   logIdCounter: 1,
 
   lastAction: "Nothing shipped yet",
@@ -135,7 +135,7 @@ function reducer(state: GameState, action: Action): GameState {
     }
 
     case "SHIP_IT": {
-      const { log, logIdCounter } = addLog(state.log, state.logIdCounter, action.actionText, "🚀");
+      const { log, logIdCounter } = addLog(state.log, state.logIdCounter, action.actionText, ">>");
       return {
         ...state,
         credits: state.credits + action.earn,
@@ -159,7 +159,7 @@ function reducer(state: GameState, action: Action): GameState {
       const newOwned = state.ownedInfra.map((o, i) =>
         i === action.index ? { ...o, count: o.count + 1 } : o
       );
-      const { log, logIdCounter } = addLog(state.log, state.logIdCounter, `Provisioned ${infra.name}. The bill will be fine.`, "🖥️");
+      const { log, logIdCounter } = addLog(state.log, state.logIdCounter, `Provisioned ${infra.name}. The bill will be fine.`, "[+]");
       return { ...state, credits: state.credits - cost, ownedInfra: newOwned, log, logIdCounter };
     }
 
@@ -169,7 +169,7 @@ function reducer(state: GameState, action: Action): GameState {
       if (state.credits < def.hireCost) return state;
       if (state.hiredInterns.find((i) => i.defId === action.defId)) return state;
       const newIntern: HiredIntern = { defId: action.defId, level: "Junior", busy: false };
-      const { log, logIdCounter } = addLog(state.log, state.logIdCounter, `${def.name} joined. Orientation is tomorrow. Maybe.`, "🧑‍💻");
+      const { log, logIdCounter } = addLog(state.log, state.logIdCounter, `${def.name} joined. Orientation is tomorrow. Maybe.`, "[>]");
       return {
         ...state,
         credits: state.credits - def.hireCost,
@@ -187,7 +187,7 @@ function reducer(state: GameState, action: Action): GameState {
       const nextLevel: InternLevel = intern.level === "Junior" ? "Mid" : "Staff";
       const cost = INTERN_LEVEL_UPGRADE_COST[nextLevel];
       if (state.credits < cost) return state;
-      const { log, logIdCounter } = addLog(state.log, state.logIdCounter, `${def.name} promoted to ${nextLevel}. They asked for equity.`, "📈");
+      const { log, logIdCounter } = addLog(state.log, state.logIdCounter, `${def.name} promoted to ${nextLevel}. They asked for equity.`, "^^");
       return {
         ...state,
         credits: state.credits - cost,
@@ -209,7 +209,7 @@ function reducer(state: GameState, action: Action): GameState {
         state.log,
         state.logIdCounter,
         `${internDef?.name ?? "Intern"} assigned to ${incidentDef?.name ?? "incident"}. Confidence: medium.`,
-        "👀"
+        ".."
       );
       return {
         ...state,
@@ -228,14 +228,14 @@ function reducer(state: GameState, action: Action): GameState {
 
     case "ADD_INCIDENT": {
       const def = INCIDENTS.find((d) => d.id === action.incident.defId);
-      const { log, logIdCounter } = addLog(state.log, state.logIdCounter, `${def?.name ?? "Incident"}: ${def?.flavor ?? ""}`, "🚨");
+      const { log, logIdCounter } = addLog(state.log, state.logIdCounter, `${def?.name ?? "Incident"}: ${def?.flavor ?? ""}`, "[!]");
       return { ...state, activeIncidents: [...state.activeIncidents, action.incident], log, logIdCounter };
     }
 
     case "RESOLVE_INCIDENT_MANUAL": {
       const incident = state.activeIncidents.find((i) => i.id === action.incidentId);
       const def = INCIDENTS.find((d) => d.id === incident?.defId);
-      const { log, logIdCounter } = addLog(state.log, state.logIdCounter, `${def?.name ?? "Incident"} resolved manually. Barely.`, "✅");
+      const { log, logIdCounter } = addLog(state.log, state.logIdCounter, `${def?.name ?? "Incident"} resolved manually. Barely.`, "ok");
       return {
         ...state,
         activeIncidents: state.activeIncidents.filter((i) => i.id !== action.incidentId),
@@ -257,9 +257,9 @@ function reducer(state: GameState, action: Action): GameState {
         ? (INTERN_SIDE_EFFECT_QUIPS[action.internId] ?? [])[0]
         : null;
 
-      let { log, logIdCounter } = addLog(state.log, state.logIdCounter, `${internDef?.name}: ${quip}`, "✅");
+      let { log, logIdCounter } = addLog(state.log, state.logIdCounter, `${internDef?.name}: ${quip}`, "ok");
       if (sideQuip) {
-        ({ log, logIdCounter } = addLog(log, logIdCounter, sideQuip, "⚠️"));
+        ({ log, logIdCounter } = addLog(log, logIdCounter, sideQuip, "!!"));
       }
 
       return {
@@ -278,7 +278,7 @@ function reducer(state: GameState, action: Action): GameState {
       if (!def) return state;
       if (state.credits < def.cost) return state;
       if (state.purchasedUpgradeIds.includes(def.id)) return state;
-      const { log, logIdCounter } = addLog(state.log, state.logIdCounter, `Purchased ${def.name}. ${def.description}`, "🛒");
+      const { log, logIdCounter } = addLog(state.log, state.logIdCounter, `Purchased ${def.name}. ${def.description}`, "[$]");
       return {
         ...state,
         credits: state.credits - def.cost,
@@ -327,7 +327,7 @@ function reducer(state: GameState, action: Action): GameState {
         INITIAL_STATE.log,
         INITIAL_STATE.logIdCounter,
         "Migration complete. You feel wiser. You are not.",
-        "🌩️"
+        "~~"
       );
       return {
         ...INITIAL_STATE,

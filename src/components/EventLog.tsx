@@ -17,7 +17,7 @@ export function EventLog({ state }: { state: GameState }) {
       </Box>
       {state.activeIncidents.length > 0 && (
         <Box flexDirection="column" marginTop={1} borderStyle="single" borderColor="red" paddingX={1}>
-          <Text bold color="red">ACTIVE INCIDENTS — press [r] to resolve</Text>
+          <Text bold color="red">ACTIVE INCIDENTS - press [r] to resolve</Text>
           {state.activeIncidents.map((incident, i) => {
             const def = INCIDENTS.find((d) => d.id === incident.defId);
             return (

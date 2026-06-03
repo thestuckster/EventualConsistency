@@ -6,8 +6,8 @@ import type { GameState } from "../game/state.ts";
 export function InternPanel({ state, focused }: { state: GameState; focused: boolean }) {
   return (
     <Box flexDirection="column" borderStyle="single" borderColor={focused ? "cyan" : "gray"} paddingX={1} width={26}>
-      <Text bold color={focused ? "cyan" : "white"}>INTERNS{focused ? " ◀" : ""}</Text>
-      <Text dimColor>↑↓ navigate  [h] hire  [u] upgrade</Text>
+      <Text bold color={focused ? "cyan" : "white"}>INTERNS{focused ? " <" : ""}</Text>
+      <Text dimColor>^v navigate  [h] hire  [u] upgrade</Text>
       <Box flexDirection="column" marginTop={0}>
         {INTERNS.map((def, i) => {
           const hired = state.hiredInterns.find((h) => h.defId === def.id);
@@ -21,10 +21,10 @@ export function InternPanel({ state, focused }: { state: GameState; focused: boo
                   color={isSelected ? "cyan" : hired ? "green" : canAfford ? "white" : "gray"}
                   bold={isSelected}
                 >
-                  {isSelected ? "▶ " : "  "}
+                  {isSelected ? "> " : "  "}
                   {def.name}
                   {hired ? ` [${hired.level}]` : ""}
-                  {hired?.busy ? " ⚙️" : ""}
+                  {hired?.busy ? " *" : ""}
                 </Text>
               </Box>
               {isSelected && (

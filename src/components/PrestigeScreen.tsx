@@ -38,7 +38,7 @@ export function PrestigeScreen({
 
   return (
     <Box borderStyle="double" borderColor="magenta" flexDirection="column" paddingX={2} paddingY={1} width={60}>
-      <Text bold color="magenta">☁️  CLOUD MIGRATION</Text>
+      <Text bold color="magenta">CLOUD MIGRATION</Text>
       <Box marginTop={1} flexDirection="column">
         <Text bold color="cyan">{nextTier.name}</Text>
         <Text dimColor italic>{nextTier.tagline}</Text>
@@ -49,7 +49,7 @@ export function PrestigeScreen({
         <Text>Reward: <Text color="magenta">{nextTier.warStoryReward}</Text></Text>
       </Box>
       <Box marginTop={1} flexDirection="column">
-        <Text color="yellow" bold>⚠️  This resets all credits and infrastructure.</Text>
+        <Text color="yellow" bold>[!] This resets all credits and infrastructure.</Text>
         <Text color="yellow">War Stories and their bonuses persist.</Text>
       </Box>
       <Box marginTop={1} flexDirection="column">
@@ -59,7 +59,7 @@ export function PrestigeScreen({
         ) : (
           state.completedPrestigeIds.map((id) => {
             const tier = PRESTIGE_TIERS.find((t) => t.id === id);
-            return <Text key={id} color="green">✓ {tier?.name}</Text>;
+            return <Text key={id} color="green">+ {tier?.name}</Text>;
           })
         )}
       </Box>

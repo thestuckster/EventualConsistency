@@ -14,8 +14,8 @@ function formatCost(n: number): string {
 export function InfraPanel({ state, focused }: { state: GameState; focused: boolean }) {
   return (
     <Box flexDirection="column" borderStyle="single" borderColor={focused ? "cyan" : "gray"} paddingX={1} width={30}>
-      <Text bold color={focused ? "cyan" : "white"}>INFRASTRUCTURE{focused ? " ◀" : ""}</Text>
-      <Text dimColor>↑↓ navigate  [b] buy</Text>
+      <Text bold color={focused ? "cyan" : "white"}>INFRASTRUCTURE{focused ? " <" : ""}</Text>
+      <Text dimColor>^v navigate  [b] buy</Text>
       <Box flexDirection="column" marginTop={0}>
         {INFRASTRUCTURE.map((def, i) => {
           const owned = state.ownedInfra[i];
@@ -35,8 +35,8 @@ export function InfraPanel({ state, focused }: { state: GameState; focused: bool
                   color={isSelected ? "cyan" : locked ? "gray" : canAfford ? "white" : "gray"}
                   bold={isSelected}
                 >
-                  {isSelected ? "▶ " : "  "}
-                  {locked ? "🔒 " : ""}
+                  {isSelected ? "> " : "  "}
+                  {locked ? "[?] " : ""}
                   {def.name}
                   {count > 0 ? ` x${count}` : ""}
                 </Text>

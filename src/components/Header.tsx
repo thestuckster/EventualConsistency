@@ -51,17 +51,17 @@ export function Header({ state }: { state: GameState }) {
       </Box>
       <Box gap={4} marginTop={0}>
         <Text>
-          <Text color="yellow" bold>💰 {formatCredits(state.credits)}</Text>
+          <Text color="yellow" bold>$ {formatCredits(state.credits)}</Text>
         </Text>
         <Text>
-          <Text color="green">📈 {formatCredits(perSec)}/sec</Text>
+          <Text color="green">^ {formatCredits(perSec)}/sec</Text>
         </Text>
         <Text>
-          <Text color="magenta">☁️  War Stories: {state.completedPrestigeIds.length}</Text>
+          <Text color="magenta">~ War Stories: {state.completedPrestigeIds.length}</Text>
         </Text>
         {incidentCount > 0 && (
           <Text>
-            <Text color="red" bold>🚨 {incidentCount} incident{incidentCount !== 1 ? "s" : ""} active</Text>
+            <Text color="red" bold>[!] {incidentCount} incident{incidentCount !== 1 ? "s" : ""} active</Text>
           </Text>
         )}
       </Box>

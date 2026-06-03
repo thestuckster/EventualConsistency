@@ -14,8 +14,8 @@ export function UpgradePanel({ state, focused }: { state: GameState; focused: bo
 
   return (
     <Box flexDirection="column" borderStyle="single" borderColor={focused ? "cyan" : "gray"} paddingX={1} width={30}>
-      <Text bold color={focused ? "cyan" : "white"}>UPGRADES{focused ? " ◀" : ""}</Text>
-      <Text dimColor>↑↓ navigate  [b] buy</Text>
+      <Text bold color={focused ? "cyan" : "white"}>UPGRADES{focused ? " <" : ""}</Text>
+      <Text dimColor>^v navigate  [b] buy</Text>
       <Box flexDirection="column" marginTop={0}>
         {CLICK_UPGRADES.map((def, i) => {
           const purchased = state.purchasedUpgradeIds.includes(def.id);
@@ -30,8 +30,8 @@ export function UpgradePanel({ state, focused }: { state: GameState; focused: bo
                   bold={isSelected}
                   dimColor={purchased}
                 >
-                  {isSelected ? "▶ " : "  "}
-                  {purchased ? "✓ " : ""}
+                  {isSelected ? "> " : "  "}
+                  {purchased ? "+ " : ""}
                   {def.name}
                 </Text>
               </Box>
@@ -39,7 +39,7 @@ export function UpgradePanel({ state, focused }: { state: GameState; focused: bo
                 <Box flexDirection="column" marginLeft={3}>
                   <Text dimColor italic wrap="wrap">{def.description}</Text>
                   {purchased ? (
-                    <Text color="green" dimColor>✓ Purchased  +{def.clickBonus}/click</Text>
+                    <Text color="green" dimColor>[+] purchased  +{def.clickBonus}/click</Text>
                   ) : (
                     <Text color={canAfford ? "green" : "red"}>
                       {formatCost(def.cost)}  +{def.clickBonus}/click
