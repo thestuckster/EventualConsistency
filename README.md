@@ -4,6 +4,9 @@
 
 A terminal-based incremental game, set inside a cloud computing startup that is definitely disrupting the space. You start with nothing but a laptop and unshakeable confidence. You end up owning us-east-1.
 
+![StartScreen](./docs/startScreen.png)
+
+
 Built with [Bun](https://bun.sh) and [Ink](https://github.com/vadimdemedes/ink).
 
 ---
