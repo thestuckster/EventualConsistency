@@ -35,17 +35,16 @@ export function UpgradePanel({ state, focused }: { state: GameState; focused: bo
                   {def.name}
                 </Text>
               </Box>
-              {isSelected && !purchased && (
+              {isSelected && (
                 <Box flexDirection="column" marginLeft={3}>
                   <Text dimColor italic wrap="wrap">{def.description}</Text>
-                  <Text color={canAfford ? "green" : "red"}>
-                    {formatCost(def.cost)}  +{def.clickBonus}/click
-                  </Text>
-                </Box>
-              )}
-              {isSelected && purchased && (
-                <Box marginLeft={3}>
-                  <Text color="green" dimColor>Already purchased.</Text>
+                  {purchased ? (
+                    <Text color="green" dimColor>✓ Purchased  +{def.clickBonus}/click</Text>
+                  ) : (
+                    <Text color={canAfford ? "green" : "red"}>
+                      {formatCost(def.cost)}  +{def.clickBonus}/click
+                    </Text>
+                  )}
                 </Box>
               )}
             </Box>
