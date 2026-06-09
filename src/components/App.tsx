@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Box, Text, useInput, useApp } from "ink";
-import { useGameState, INITIAL_STATE, type Panel, type GameState } from "../game/state.ts";
+import { useGameState, createInitialState, type Panel, type GameState } from "../game/state.ts";
+import { pluginRegistry } from "../game/plugins.ts";
+import { INFRASTRUCTURE } from "../game/infrastructure.ts";
 import { Header, computePerSec, computeClickIncome } from "./Header.tsx";
 import { InfraPanel } from "./InfraPanel.tsx";
 import { InternPanel } from "./InternPanel.tsx";
@@ -49,7 +51,7 @@ interface AppProps {
 
 export function App({ initialState, offlineEarnings = 0, offlineSeconds = 0, isNewGame = false }: AppProps) {
   const { exit } = useApp();
-  const [state, dispatch] = useGameState(initialState ?? INITIAL_STATE);
+  const [state, dispatch] = useGameState(initialState ?? createInitialState());
   const stateRef = useRef(state);
   stateRef.current = state;
 
@@ -80,16 +82,15 @@ export function App({ initialState, offlineEarnings = 0, offlineSeconds = 0, isN
             const eligible = INCIDENTS.filter((def) => totalInfra >= def.minInfraCount);
             if (eligible.length > 0) {
               const def = eligible[Math.floor(Math.random() * eligible.length)]!;
-              dispatch({
-                type: "ADD_INCIDENT",
-                incident: {
-                  id: `inc_${incidentIdCounter++}`,
-                  defId: def.id,
-                  startedAt: Date.now(),
-                  resolvingInternId: null,
-                  resolveTick: null,
-                },
-              });
+              const newIncident = {
+                id: `inc_${incidentIdCounter++}`,
+                defId: def.id,
+                startedAt: Date.now(),
+                resolvingInternId: null,
+                resolveTick: null,
+              };
+              dispatch({ type: "ADD_INCIDENT", incident: newIncident });
+              for (const a of pluginRegistry.runOnIncidentSpawned(newIncident, s)) dispatch(a);
             }
           }
         }
@@ -151,7 +152,15 @@ export function App({ initialState, offlineEarnings = 0, offlineSeconds = 0, isN
         }
       }
 
-      // 6. Auto-save (every 30s = every 300 ticks)
+      // 6. Plugin tick phases
+      for (const phase of pluginRegistry.getTickPhases()) {
+        if (tick % phase.interval === 0) phase.run(s, tick, dispatch);
+      }
+
+      // 7. Plugin onTick hooks
+      for (const a of pluginRegistry.runOnTick(s, tick)) dispatch(a);
+
+      // 8. Auto-save (every 30s = every 300 ticks)
       if (tick > 0 && tick % 300 === 0) {
         saveGame(s).catch(() => {});
       }
@@ -172,7 +181,7 @@ export function App({ initialState, offlineEarnings = 0, offlineSeconds = 0, isN
     if (newGameConfirm) {
       if (input === "y") {
         deleteSave().catch(() => {});
-        dispatch({ type: "LOAD_SAVE", state: INITIAL_STATE });
+        dispatch({ type: "LOAD_SAVE", state: createInitialState() });
         setNewGameConfirm(false);
         setShowIntro(true);
       } else {
@@ -196,7 +205,11 @@ export function App({ initialState, offlineEarnings = 0, offlineSeconds = 0, isN
       if (s.prestigeConfirming) {
         if (input === "y") {
           const nextTier = PRESTIGE_TIERS[s.completedPrestigeIds.length];
-          if (nextTier) { dispatch({ type: "PRESTIGE", prestigeId: nextTier.id }); dispatch({ type: "CANCEL_PRESTIGE" }); }
+          if (nextTier) {
+            dispatch({ type: "PRESTIGE", prestigeId: nextTier.id });
+            dispatch({ type: "CANCEL_PRESTIGE" });
+            for (const a of pluginRegistry.runOnPrestige(nextTier.id, s)) dispatch(a);
+          }
         } else if (input === "n" || key.escape) {
           dispatch({ type: "CANCEL_PRESTIGE" });
         }
@@ -216,7 +229,7 @@ export function App({ initialState, offlineEarnings = 0, offlineSeconds = 0, isN
     }
 
     if (key.tab) {
-      const panels: Panel[] = ["upgrades", "infra", "interns"];
+      const panels: Panel[] = ["upgrades", "infra", "interns", ...pluginRegistry.getPanels().map((p) => p.id)];
       const idx = panels.indexOf(s.focusedPanel);
       dispatch({ type: "FOCUS_PANEL", panel: panels[(idx + 1) % panels.length] ?? "upgrades" });
       return;
@@ -226,17 +239,27 @@ export function App({ initialState, offlineEarnings = 0, offlineSeconds = 0, isN
     if (key.downArrow) { dispatch({ type: "NAV_DOWN" }); return; }
 
     if (input === "b") {
-      if (s.focusedPanel === "infra") dispatch({ type: "BUY_INFRA", index: s.selectedInfraIndex });
+      if (s.focusedPanel === "infra") {
+        const def = INFRASTRUCTURE[s.selectedInfraIndex];
+        dispatch({ type: "BUY_INFRA", index: s.selectedInfraIndex });
+        if (def) for (const a of pluginRegistry.runOnPurchase("infra", def.id, s)) dispatch(a);
+      }
       if (s.focusedPanel === "upgrades") {
         const def = CLICK_UPGRADES[s.selectedUpgradeIndex];
-        if (def) dispatch({ type: "BUY_UPGRADE", id: def.id });
+        if (def) {
+          dispatch({ type: "BUY_UPGRADE", id: def.id });
+          for (const a of pluginRegistry.runOnPurchase("upgrade", def.id, s)) dispatch(a);
+        }
       }
       return;
     }
 
     if (input === "h" && s.focusedPanel === "interns") {
       const internDef = INTERNS[s.selectedInternIndex];
-      if (internDef) dispatch({ type: "HIRE_INTERN", defId: internDef.id });
+      if (internDef) {
+        dispatch({ type: "HIRE_INTERN", defId: internDef.id });
+        for (const a of pluginRegistry.runOnPurchase("intern", internDef.id, s)) dispatch(a);
+      }
       return;
     }
 
@@ -255,6 +278,10 @@ export function App({ initialState, offlineEarnings = 0, offlineSeconds = 0, isN
     if (input === "p") { dispatch({ type: "TOGGLE_PRESTIGE" }); return; }
     if (input === "n") { setNewGameConfirm(true); return; }
     if (input === "q") { setQuitting(true); return; }
+
+    for (const handler of pluginRegistry.getKeyHandlers()) {
+      if (input === handler.key) { handler.run(s, dispatch); return; }
+    }
   });
 
   // --- Overlay screens ---
@@ -337,7 +364,11 @@ export function App({ initialState, offlineEarnings = 0, offlineSeconds = 0, isN
       <Box flexDirection="column" alignItems="center" justifyContent="center" padding={2}>
         <PrestigeScreen
           state={state}
-          onConfirm={(id) => { dispatch({ type: "PRESTIGE", prestigeId: id }); dispatch({ type: "CANCEL_PRESTIGE" }); }}
+          onConfirm={(id) => {
+            dispatch({ type: "PRESTIGE", prestigeId: id });
+            dispatch({ type: "CANCEL_PRESTIGE" });
+            for (const a of pluginRegistry.runOnPrestige(id, state)) dispatch(a);
+          }}
           onCancel={() => dispatch({ type: "CANCEL_PRESTIGE" })}
         />
       </Box>
@@ -352,6 +383,9 @@ export function App({ initialState, offlineEarnings = 0, offlineSeconds = 0, isN
         <UpgradePanel state={state} focused={state.focusedPanel === "upgrades"} />
         <InfraPanel state={state} focused={state.focusedPanel === "infra"} />
         <InternPanel state={state} focused={state.focusedPanel === "interns"} />
+        {pluginRegistry.getPanels().map(({ id, component: PluginPanel }) => (
+          state.focusedPanel === id ? <PluginPanel key={id} state={state} dispatch={dispatch} /> : null
+        ))}
         <EventLog state={state} />
       </Box>
       <StatusBar state={state} />

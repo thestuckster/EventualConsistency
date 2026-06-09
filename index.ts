@@ -1,7 +1,10 @@
 import React from "react";
 import { render } from "ink";
+import { loadPlugins } from "./src/game/pluginLoader.ts";
 import { App } from "./src/components/App.tsx";
 import { loadGame } from "./src/game/persistence.ts";
+
+await loadPlugins();
 
 const saved = await loadGame();
 

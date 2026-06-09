@@ -4,6 +4,7 @@ import { INCIDENTS, type ActiveIncident } from "./incidents.ts";
 import { INTERNS, INTERN_QUIPS, INTERN_SIDE_EFFECT_QUIPS, INTERN_LEVEL_UPGRADE_COST, type HiredIntern, type InternLevel } from "./interns.ts";
 import { computeWarStoryEffects, type WarStoryEffects } from "./prestige.ts";
 import { CLICK_UPGRADES } from "./upgrades.ts";
+import { pluginRegistry } from "./plugins.ts";
 
 export interface OwnedInfra {
   defId: string;
@@ -16,7 +17,8 @@ export interface LogEntry {
   emoji: string;
 }
 
-export type Panel = "infra" | "interns" | "upgrades";
+// Built-in panels plus any string id registered by plugins
+export type Panel = "infra" | "interns" | "upgrades" | (string & {});
 
 export interface GameState {
   credits: number;
@@ -47,6 +49,9 @@ export interface GameState {
 
   showPrestige: boolean;
   prestigeConfirming: boolean;
+
+  /** Keyed by plugin id — persisted through save/load via plugin onSave/onLoad hooks. */
+  pluginState: Record<string, Record<string, unknown>>;
 }
 
 export type Action =
@@ -71,7 +76,8 @@ export type Action =
   | { type: "LOAD_SAVE"; state: GameState }
   | { type: "LOG"; message: string; emoji: string }
   | { type: "MARK_MILESTONE"; credits: number }
-  | { type: "SET_LAST_SAVED_AT"; ts: number };
+  | { type: "SET_LAST_SAVED_AT"; ts: number }
+  | { type: "PLUGIN_ACTION"; pluginAction: string; payload: unknown };
 
 function initialInfra(): OwnedInfra[] {
   return INFRASTRUCTURE.map((def) => ({ defId: def.id, count: 0 }));
@@ -87,38 +93,44 @@ function addLog(
   return { log: [entry, ...log].slice(0, 20), logIdCounter: logIdCounter + 1 };
 }
 
-const defaultWarStoryEffects = computeWarStoryEffects([]);
+/**
+ * Creates a fresh initial state. Called after plugins are loaded so that
+ * plugin-contributed infrastructure, interns, etc. are included from the start.
+ */
+export function createInitialState(): GameState {
+  return {
+    credits: 0,
+    totalCreditsEarned: 0,
+    tick: 0,
 
-export const INITIAL_STATE: GameState = {
-  credits: 0,
-  totalCreditsEarned: 0,
-  tick: 0,
+    ownedInfra: initialInfra(),
+    hiredInterns: [],
+    activeIncidents: [],
+    purchasedUpgradeIds: [],
 
-  ownedInfra: initialInfra(),
-  hiredInterns: [],
-  activeIncidents: [],
-  purchasedUpgradeIds: [],
+    completedPrestigeIds: [],
+    warStoryEffects: computeWarStoryEffects([]),
 
-  completedPrestigeIds: [],
-  warStoryEffects: defaultWarStoryEffects,
+    log: [{ id: 0, message: "Welcome. You have nothing. Start shipping.", emoji: "~" }],
+    logIdCounter: 1,
 
-  log: [{ id: 0, message: "Welcome. You have nothing. Start shipping.", emoji: "~" }],
-  logIdCounter: 1,
+    lastAction: "Nothing shipped yet",
+    shipItIndex: 0,
 
-  lastAction: "Nothing shipped yet",
-  shipItIndex: 0,
+    focusedPanel: "upgrades",
+    selectedInfraIndex: 0,
+    selectedInternIndex: 0,
+    selectedUpgradeIndex: 0,
 
-  focusedPanel: "upgrades",
-  selectedInfraIndex: 0,
-  selectedInternIndex: 0,
-  selectedUpgradeIndex: 0,
+    milestonesSeen: [],
+    lastSavedAt: Date.now(),
 
-  milestonesSeen: [],
-  lastSavedAt: Date.now(),
+    showPrestige: false,
+    prestigeConfirming: false,
 
-  showPrestige: false,
-  prestigeConfirming: false,
-};
+    pluginState: {},
+  };
+}
 
 function reducer(state: GameState, action: Action): GameState {
   switch (action.type) {
@@ -323,17 +335,19 @@ function reducer(state: GameState, action: Action): GameState {
     case "PRESTIGE": {
       const newCompleted = [...state.completedPrestigeIds, action.prestigeId];
       const newEffects = computeWarStoryEffects(newCompleted);
+      const fresh = createInitialState();
       const { log, logIdCounter } = addLog(
-        INITIAL_STATE.log,
-        INITIAL_STATE.logIdCounter,
+        fresh.log,
+        fresh.logIdCounter,
         "Migration complete. You feel wiser. You are not.",
         "~~"
       );
       return {
-        ...INITIAL_STATE,
+        ...fresh,
         completedPrestigeIds: newCompleted,
         warStoryEffects: newEffects,
         milestonesSeen: state.milestonesSeen,
+        pluginState: state.pluginState,
         lastSavedAt: Date.now(),
         log,
         logIdCounter,
@@ -354,11 +368,16 @@ function reducer(state: GameState, action: Action): GameState {
     case "SET_LAST_SAVED_AT":
       return { ...state, lastSavedAt: action.ts };
 
+    case "PLUGIN_ACTION": {
+      const handler = pluginRegistry.getReducerExtension(action.pluginAction);
+      return handler ? handler(state, action.payload) : state;
+    }
+
     default:
       return state;
   }
 }
 
-export function useGameState(initialState: GameState = INITIAL_STATE) {
-  return useReducer(reducer, initialState);
+export function useGameState(initialState?: GameState) {
+  return useReducer(reducer, initialState ?? createInitialState());
 }

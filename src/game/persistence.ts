@@ -1,7 +1,8 @@
 import { join } from "node:path";
 import { existsSync, mkdirSync } from "node:fs";
-import { INITIAL_STATE, type GameState } from "./state.ts";
+import { createInitialState, type GameState } from "./state.ts";
 import { computePerSec } from "../components/Header.tsx";
+import { pluginRegistry } from "./plugins.ts";
 
 const SAVE_DIR = join(process.env["HOME"] ?? ".", ".eventual-consistency");
 const SAVE_PATH = join(SAVE_DIR, "save.json");
@@ -17,7 +18,8 @@ export interface LoadResult {
 
 export async function saveGame(state: GameState): Promise<void> {
   if (!existsSync(SAVE_DIR)) mkdirSync(SAVE_DIR, { recursive: true });
-  const data = { ...state, lastSavedAt: Date.now() };
+  const pluginState = pluginRegistry.runOnSave(state);
+  const data = { ...state, lastSavedAt: Date.now(), pluginState };
   await Bun.write(SAVE_PATH, JSON.stringify(data));
 }
 
@@ -32,9 +34,10 @@ export async function loadGame(): Promise<LoadResult | null> {
     return null;
   }
 
-  // Migrate missing fields from newer versions of INITIAL_STATE
+  // Spread createInitialState() first so any fields added in newer versions
+  // (including plugin-contributed infra slots) are present as defaults.
   const state: GameState = {
-    ...INITIAL_STATE,
+    ...createInitialState(),
     ...raw,
     tick: 0,
     showPrestige: false,
@@ -43,6 +46,7 @@ export async function loadGame(): Promise<LoadResult | null> {
     purchasedUpgradeIds: raw.purchasedUpgradeIds ?? [],
     selectedUpgradeIndex: raw.selectedUpgradeIndex ?? 0,
     lastSavedAt: raw.lastSavedAt ?? Date.now(),
+    pluginState: raw.pluginState ?? {},
     // resolveTick is an absolute tick value; reset on load so interns
     // get reassigned from tick 0 rather than waiting for a tick that
     // may never arrive in the new session.
@@ -53,6 +57,9 @@ export async function loadGame(): Promise<LoadResult | null> {
     })),
     hiredInterns: (raw.hiredInterns ?? []).map((h) => ({ ...h, busy: false })),
   };
+
+  // Notify plugins of their persisted state
+  pluginRegistry.runOnLoad(state.pluginState);
 
   const now = Date.now();
   const deltaSec = Math.min(MAX_OFFLINE_SECONDS, (now - state.lastSavedAt) / 1000);
