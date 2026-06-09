@@ -6,6 +6,9 @@
   "bin": {
     "cloud": "./bin/cloud.ts"
   },
+  "scripts": {
+    "compile": "bun build --compile --target=bun index.ts --outfile eventual-consistency"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
