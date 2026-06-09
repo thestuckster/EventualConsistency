@@ -47,7 +47,9 @@ export async function loadGame(): Promise<LoadResult | null> {
 
   const now = Date.now();
   const deltaSec = Math.min(MAX_OFFLINE_SECONDS, (now - state.lastSavedAt) / 1000);
-  const perSec = computePerSec(state);
+  // Offline earnings ignore active incidents — incidents are transient events
+  // that shouldn't penalize players who happened to save during one.
+  const perSec = computePerSec({ ...state, activeIncidents: [] });
   const offlineEarnings = deltaSec > 5 ? perSec * deltaSec * OFFLINE_RATE : 0;
 
   const loaded: GameState = {
