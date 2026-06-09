@@ -43,6 +43,15 @@ export async function loadGame(): Promise<LoadResult | null> {
     purchasedUpgradeIds: raw.purchasedUpgradeIds ?? [],
     selectedUpgradeIndex: raw.selectedUpgradeIndex ?? 0,
     lastSavedAt: raw.lastSavedAt ?? Date.now(),
+    // resolveTick is an absolute tick value; reset on load so interns
+    // get reassigned from tick 0 rather than waiting for a tick that
+    // may never arrive in the new session.
+    activeIncidents: (raw.activeIncidents ?? []).map((i) => ({
+      ...i,
+      resolvingInternId: null,
+      resolveTick: null,
+    })),
+    hiredInterns: (raw.hiredInterns ?? []).map((h) => ({ ...h, busy: false })),
   };
 
   const now = Date.now();
