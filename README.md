@@ -171,6 +171,18 @@ At certain total credit thresholds, the event log prints a story beat. These ran
 
 ---
 
+## Plugins
+
+The game has a plugin system. Drop a `.ts` or `.js` file into `~/.eventual-consistency/plugins/` and it loads automatically on startup. Plugins can add new infrastructure, interns, incidents, and upgrades; react to game events; add keybindings; and build entirely new UI panels.
+
+| Doc | Description |
+|-----|-------------|
+| [Getting Started](./docs/plugins/getting-started.md) | Install your first plugin in under 5 minutes |
+| [How It Works](./docs/plugins/how-it-works.md) | Loading lifecycle, content injection, hooks, and mechanics |
+| [API Reference](./docs/plugins/api-reference.md) | Every interface, field, hook, and type |
+
+---
+
 ## Save File
 
 Your game is saved automatically every 30 seconds and on quit. Save data lives at:
