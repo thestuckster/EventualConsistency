@@ -50,11 +50,13 @@ export async function loadGame(): Promise<LoadResult | null> {
     // resolveTick is an absolute tick value; reset on load so interns
     // get reassigned from tick 0 rather than waiting for a tick that
     // may never arrive in the new session.
-    activeIncidents: (raw.activeIncidents ?? []).map((i) => ({
-      ...i,
-      resolvingInternId: null,
-      resolveTick: null,
-    })),
+    activeIncidents: dedupeIncidentIds(
+      (raw.activeIncidents ?? []).map((i) => ({
+        ...i,
+        resolvingInternId: null,
+        resolveTick: null,
+      }))
+    ),
     hiredInterns: (raw.hiredInterns ?? []).map((h) => ({ ...h, busy: false })),
   };
 
@@ -76,6 +78,25 @@ export async function loadGame(): Promise<LoadResult | null> {
   };
 
   return { state: loaded, offlineEarnings, offlineSeconds: deltaSec };
+}
+
+// Older saves could end up with duplicate incident ids; reassign any
+// duplicates to keep ids unique (used as React keys in the UI).
+function dedupeIncidentIds(incidents: GameState["activeIncidents"]): GameState["activeIncidents"] {
+  const seen = new Set<string>();
+  let next = 1;
+  return incidents.map((incident) => {
+    if (!seen.has(incident.id)) {
+      seen.add(incident.id);
+      return incident;
+    }
+    let id: string;
+    do {
+      id = `inc_${next++}`;
+    } while (seen.has(id));
+    seen.add(id);
+    return { ...incident, id };
+  });
 }
 
 export async function deleteSave(): Promise<void> {

@@ -55,6 +55,15 @@ export function App({ initialState, offlineEarnings = 0, offlineSeconds = 0, isN
   const stateRef = useRef(state);
   stateRef.current = state;
 
+  const idCounterInitialized = useRef(false);
+  if (!idCounterInitialized.current) {
+    idCounterInitialized.current = true;
+    const ids = (initialState?.activeIncidents ?? [])
+      .map((i) => parseInt(i.id.replace("inc_", ""), 10))
+      .filter((n) => !isNaN(n));
+    if (ids.length > 0) incidentIdCounter = Math.max(incidentIdCounter, Math.max(...ids) + 1);
+  }
+
   const [quitting, setQuitting] = useState(false);
   const [newGameConfirm, setNewGameConfirm] = useState(false);
   const [showOffline, setShowOffline] = useState(offlineEarnings > 0.01);
